@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM registry.cn-hangzhou.aliyuncs.com/library/node:18-alpiney
 WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm install --only=production
