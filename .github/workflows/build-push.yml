@@ -1,9 +1,9 @@
 name: build-and-push-image
-
 on:
   push:
     tags:
-      - 'v*'   # 更严格可改为 'v[0-9]+.[0-9]+.[0-9]+'，只匹配语义化版本
+      - 'v*'
+  workflow_dispatch:
 
 env:
   REGISTRY: crpi-z7xsgj5pgtmfh9sv.cn-heyuan.personal.cr.aliyuncs.com
@@ -11,7 +11,7 @@ env:
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,7 +22,6 @@ jobs:
       - name: 从 tag 提取版本号
         id: meta
         run: |
-          # GITHUB_REF_NAME 即 tag 名，如 v1.1.0，去掉 v 前缀得到 1.1.0
           VERSION="${GITHUB_REF_NAME#v}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "提取到版本号: $VERSION"
@@ -37,8 +36,7 @@ jobs:
       - name: Build & Push
         uses: docker/build-push-action@v6
         with:
-          context: .            # Dockerfile 在根目录；若在子目录，改成对应路径并加 file 参数
+          context: .
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ steps.meta.outputs.version }}
-          # 如需额外打 latest，可加一行：
-          #       ${{ env.REGISTRY }}/${{ env.IMAGE }}:latest
+          outputs: type=docker
