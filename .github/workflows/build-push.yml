@@ -1,0 +1,44 @@
+name: build-and-push-image
+
+on:
+  push:
+    tags:
+      - 'v*'   # 更严格可改为 'v[0-9]+.[0-9]+.[0-9]+'，只匹配语义化版本
+
+env:
+  REGISTRY: crpi-z7xsgj5pgtmfh9sv.cn-heyuan.personal.cr.aliyuncs.com
+  IMAGE: viki_test/backend-test
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 从 tag 提取版本号
+        id: meta
+        run: |
+          # GITHUB_REF_NAME 即 tag 名，如 v1.1.0，去掉 v 前缀得到 1.1.0
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "提取到版本号: $VERSION"
+
+      - name: 登录阿里云 ACR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build & Push
+        uses: docker/build-push-action@v6
+        with:
+          context: .            # Dockerfile 在根目录；若在子目录，改成对应路径并加 file 参数
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ steps.meta.outputs.version }}
+          # 如需额外打 latest，可加一行：
+          #       ${{ env.REGISTRY }}/${{ env.IMAGE }}:latest

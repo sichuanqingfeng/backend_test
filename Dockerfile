@@ -1,4 +1,4 @@
-FROM qingfeng-registry.cn-chengdu.cr.aliyuncs.com/test/node:20-alpine
+FROM node:20-alpine
 WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm install --only=production
